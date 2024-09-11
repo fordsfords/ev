@@ -17,7 +17,7 @@ tmp.*
 
 # Executable
 a.out
-test_ev
+ev_test
 
 # Prerequisites
 *.d

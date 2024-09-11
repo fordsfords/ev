@@ -5,6 +5,11 @@ A low-overhead event recording subsystem for debugging.
 ## Table of contents
 
 <!-- mdtoc-start -->
+&bull; [ev](#ev)  
+&nbsp;&nbsp;&nbsp;&nbsp;&bull; [Table of contents](#table-of-contents)  
+&nbsp;&nbsp;&nbsp;&nbsp;&bull; [Introduction](#introduction)  
+&nbsp;&nbsp;&nbsp;&nbsp;&bull; [License](#license)  
+<!-- TOC created by '../mdtoc/mdtoc.pl README.md' (see https://github.com/fordsfords/mdtoc) -->
 <!-- mdtoc-end -->
 
 

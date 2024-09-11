@@ -14,4 +14,4 @@ rm -f skeleton
 
 echo "Building code"
 
-gcc -Wall -g -o tst_ev -pthread ev.c tst_ev.c; if [ $? -ne 0 ]; then exit 1; fi
+gcc -Wall -g -o ev_test -pthread ev.c ev_test.c; if [ $? -ne 0 ]; then exit 1; fi

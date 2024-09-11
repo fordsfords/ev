@@ -16,19 +16,51 @@
 extern "C" {
 #endif
 
+/* Portability definitions between Windows and Linux. */
+#if defined(_WIN32)
+  typedef __int8 int8_t;
+  typedef __int16 int16_t;
+  typedef __int32 int32_t;
+  typedef __int64 int64_t;
+  typedef unsigned __int8 uint8_t;
+  typedef unsigned __int16 uint16_t;
+  typedef unsigned __int32 uint32_t;
+  typedef unsigned __int64 uint64_t;
+
+  pthread_self GetCurrentThreadId
+#else
+  #include <inttypes.h>
+  #include <time.h>
+#endif
+  
+
 struct ev_rec_s {
-  int event_num;
+  uint64_t event_num;
+  uint64_t data;
+  uint64_t event_usec;
   char *src_file;
-  int src_line;
+  uint32_t src_line;
+  uint32_t thread_id;
 };
 typedef struct ev_rec_s ev_rec_t;
 
 struct ev_s {
   int max_records;
   int num_records;
-  ev_rec_t *ev_recs;
+  uint64_t flags;
+  uint64_t create_usecs;
+#if defined(_WIN32)
+  uint64_t create_freq;  /* Needed for Windows QueryPerformanceCounter(). */
+#endif
+  ev_rec_t *records;
 };
 typedef struct ev_s ev_t;
+
+
+int ev_create(ev_t **rtn_ev, int max_records, uint64_t flags);
+int ev_delete(ev_t *rtn_ev);
+int ev_write(ev_t *rtn_ev, char *src_file, int src_line, uint64_t data);
+uint64_t ev_get_time_usec(ev_t *ev);
 
 #ifdef __cplusplus
 }
