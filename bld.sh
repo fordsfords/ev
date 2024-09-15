@@ -14,4 +14,8 @@ rm -f skeleton
 
 echo "Building code"
 
-gcc -Wall -g -o ev_test -pthread ev.c ev_test.c; if [ $? -ne 0 ]; then exit 1; fi
+gcc -Wall -pthread -g -o Linux64/ev_test -pthread ev.c ev_test.c; if [ $? -ne 0 ]; then exit 1; fi
+
+if [ -f ev_test/x64/Release/ev_test.exe ]; then :
+  cp ev_test/x64/Release/ev_test.exe Win64/
+fi

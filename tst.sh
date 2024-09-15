@@ -6,7 +6,7 @@ SINGLE_T="0"  # Do all tests
 if [ -n "$1" ]; then SINGLE_T="$1"; fi
 
 F="tst.sh"  # Could also use `basename $0`
-B="./ev_test"   # Executable under test.
+B="Linux64/ev_test"   # Executable under test.
 
 TEST() {
   echo "Test $T [$F:${BASH_LINENO[0]}]: $1 `date`" >$B.$T.log

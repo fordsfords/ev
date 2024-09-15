@@ -15,6 +15,18 @@ A low-overhead event recording subsystem for debugging.
 
 ## Introduction
 
+Debugging multi-threaded code can be difficult,
+espicially tracking down intermittent race conditions.
+A typical approach is to add print statements to determine the
+exact sequence of events,
+but print statements themselves change the timing of the code,
+changing the sequence of events.
+
+The "ev" module lets you determine the exact sequence of events
+with minimal impact on the timing.
+Instead of adding print statements, you add "ev_write()" statements.
+It uses a circular buffer to save the events for later analysis.
+
 
 ## License
 

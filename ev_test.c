@@ -14,13 +14,14 @@
 #if ! defined(_WIN32)
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 #endif
 #include "ev.h"
 
 #if defined(_WIN32)
-#define EV_MSLEEP(ev_msleep_msecs) Sleep(ev_msleep_msecs)
+#define MY_SLEEP_MS(ev_msleep_msecs) Sleep(ev_msleep_msecs)
 #else
-#define EV_MSLEEP(ev_msleep_msecs) usleep((ev_msleep_msecs)/1000)
+#define MY_SLEEP_MS(ev_msleep_msecs) usleep((ev_msleep_msecs)/1000)
 #endif
 
 #define E(e_test) do { \
@@ -80,13 +81,86 @@ void parse_cmdline(int argc, char **argv) {
 
 void test1() {
   ev_t *ev;
-  E(ev_create(&ev, 1000, 0));
+  ev_record_t *rec;
+  int i;
+  uint64_t t1, t2, t_diff;
 
-  uint64_t t1 = ev_get_time_usec(ev);
-  EV_MSLEEP(2);
-  uint64_t t2 = ev_get_time_usec(ev);
-  uint64_t t_diff = t2 - t1;
+  E(ev_create(&ev, 5, 0x4000000000000000));
+  ASSRT(ev->max_records == 5);
+  ASSRT(ev->num_events == 0);
+  ASSRT(ev->flags == 0x4000000000000000);
+
+  t1 = ev_get_time_usec(ev);
+  MY_SLEEP_MS(2);
+  t2 = ev_get_time_usec(ev);
+  t_diff = t2 - t1;
   ASSRT((t_diff > (2000+500)) || (t_diff < (2000 - 500)));
+  t_diff = t2 - ev->create_usecs;
+  ASSRT((t_diff > (2000+500)) || (t_diff < (2000 - 500)));
+
+  E(ev_write(ev, __FILE__, __LINE__, 126));  i = __LINE__;
+  ASSRT(ev->num_events == 1);
+
+  rec = &(ev->records[0]);
+  ASSRT(rec->event_num == 0);
+  ASSRT(rec->data == 126);
+  ASSRT(strcmp(rec->src_file, __FILE__) == 0);
+  ASSRT(rec->src_line == i);
+  ASSRT(rec->thread_id == ev_thread_id());
+  t_diff = rec->event_usec - t1;
+  ASSRT((t_diff > (2000+500)) || (t_diff < (2000 - 500)));
+
+  for (i = 1; i < 5; i++) {
+    E(ev_write(ev, __FILE__, __LINE__, i));
+  }
+  ASSRT(ev->num_events == 5);
+  /* Make sure first record is still intact. */
+  rec = &(ev->records[0]);
+  ASSRT(rec->event_num == 0);
+  ASSRT(rec->data == 126);
+  /* Verify newest record valid. */
+  rec = &(ev->records[4]);
+  ASSRT(rec->event_num == 4);
+  ASSRT(rec->data == 4);
+  ASSRT(strcmp(rec->src_file, __FILE__) == 0);
+  ASSRT(rec->thread_id == ev_thread_id());
+  t_diff = rec->event_usec - t1;
+  ASSRT((t_diff > (2000+500)) || (t_diff < (2000 - 500)));
+
+  /* Test pause. */
+  E(ev_pause(ev));
+  ASSRT(ev->flags == (0x4000000000000000 | EV_FLAGS_PAUSE));
+  E(ev_write(ev, __FILE__, __LINE__, 127));
+  /* Make sure everything is the same. */
+  ASSRT(ev->num_events == 5);
+  rec = &(ev->records[0]);
+  ASSRT(rec->event_num == 0);
+  ASSRT(rec->data == 126);
+  /* Verify newest record valid. */
+  rec = &(ev->records[4]);
+  ASSRT(rec->event_num == 4);
+  ASSRT(rec->data == 4);
+  ASSRT(strcmp(rec->src_file, __FILE__) == 0);
+  ASSRT(rec->thread_id == ev_thread_id());
+  t_diff = rec->event_usec - t1;
+  ASSRT((t_diff > (2000+500)) || (t_diff < (2000 - 500)));
+
+  E(ev_resume(ev));
+  ASSRT(ev->flags == 0x4000000000000000);
+
+  /* Wraparound back to 0. */
+  E(ev_write(ev, __FILE__, __LINE__, 128));
+  ASSRT(ev->num_events == 6);
+
+  rec = &(ev->records[0]);
+  ASSRT(rec->event_num == 5);
+  ASSRT(rec->data == 128);
+  ASSRT(strcmp(rec->src_file, __FILE__) == 0);
+  ASSRT(rec->thread_id == ev_thread_id());
+  t_diff = rec->event_usec - t1;
+  ASSRT((t_diff > (2000+500)) || (t_diff < (2000 - 500)));
+
+  E(ev_delete(ev));
 }  /* test1 */
 
 
