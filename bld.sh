@@ -10,7 +10,8 @@ for F in *.md; do :
   fi
 done
 
-rm -f skeleton
+rm -rf Linux64
+mkdir Linux64
 
 echo "Building code"
 
